@@ -2,6 +2,8 @@ package packet
 
 import (
 	"errors"
+	"github.com/google/uuid"
+	"io"
 	"math"
 )
 
@@ -316,6 +318,17 @@ func (p *Position) Decode(r Reader) error {
 	p.X, p.Y, p.Z = x, y, z
 
 	return nil
+}
+
+type UUID uuid.UUID
+
+func (u UUID) Encode() []byte {
+	return u[:]
+}
+
+func (u UUID) Decode(r Reader) error {
+	_, err := io.ReadFull(r, u[:])
+	return err
 }
 
 func readNBytes(r Reader, n int) (bs []byte, err error) {

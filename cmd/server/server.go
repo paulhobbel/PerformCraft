@@ -74,22 +74,24 @@ func acceptListPing(conn *net.Conn) {
 }
 
 func acceptLogin(conn *net.Conn) {
-	p, err := conn.ReadPacket()
-	if err != nil {
-		return
-	}
+	for {
+		p, err := conn.ReadPacket()
+		if err != nil {
+			return
+		}
 
-	switch p.ID {
-	case 0x00:
-		var Username packet.String
-		err = p.Scan(&Username)
-		log.Printf("[Server]: Starting login for %v", Username)
+		switch p.ID {
+		case 0x00:
+			var Username packet.String
+			err = p.Scan(&Username)
+			log.Printf("[Server]: Starting login for %v", Username)
 
-		err = conn.WritePacket(packet.Marshal(0x02, packet.String("74242c15-feb0-43b7-8045-2d4a602b2d74"), Username))
-	}
+			err = conn.WritePacket(packet.Marshal(0x02, packet.UUID(uuid.MustParse("74242c15-feb0-43b7-8045-2d4a602b2d74")), Username))
+		}
 
-	if err != nil {
-		return
+		if err != nil {
+			return
+		}
 	}
 }
 
@@ -105,7 +107,7 @@ func handleConn(conn *net.Conn) {
 		return
 	}
 
-	log.Println(p.Data)
+	log.Println(p.ID, p.Data)
 
 	var (
 		Protocol, Intention packet.VarInt
