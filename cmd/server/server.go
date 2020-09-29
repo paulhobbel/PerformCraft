@@ -36,8 +36,8 @@ type ServerInfo struct {
 func createListResponse() string {
 	var info ServerInfo
 
-	info.Version.Name = "PerformCraft 1.16.3"
-	info.Version.Protocol = 753
+	info.Version.Name = "PerformCraft 1.15.2"
+	info.Version.Protocol = 578
 	info.Players.Max = 1337
 	info.Players.Online = 420
 	info.Players.Sample = []ServerInfoPlayer{}
@@ -74,22 +74,51 @@ func acceptListPing(conn *net.Conn) {
 }
 
 func acceptLogin(conn *net.Conn) {
+	p, err := conn.ReadPacket()
+	if err != nil {
+		log.Println("[Server]: Failed reading login packet:", err)
+		return
+	}
+
+	var Username packet.String
+	err = p.Scan(&Username)
+	log.Printf("[Server]: Starting login for %v\n", Username)
+
+	// Accept login.
+	err = conn.WritePacket(packet.Marshal(0x02, packet.String(uuid.MustParse("74242c15-feb0-43b7-8045-2d4a602b2d74").String()), Username))
+	if err != nil {
+		log.Println("[Server]: Failed sending login accepted packet:", err)
+		return
+	}
+
+	// Join Game.
+	err = conn.WritePacket(packet.Marshal(0x26,
+		packet.Int(0),            // EntityID
+		packet.UnsignedByte(1),   // Gamemode
+		packet.Int(0),            // Dimension
+		packet.Long(0),           // HashedSeed
+		packet.UnsignedByte(200), // MaxPlayer
+		packet.String("default"), // LevelType
+		packet.VarInt(15),        // View Distance
+		packet.Boolean(false),    // Reduced Debug Info
+		packet.Boolean(true),     // Enable respawn screen
+	))
+
+	err = conn.WritePacket(packet.Marshal(0x36,
+		packet.Double(0), packet.Double(0), packet.Double(0), // XYZ
+		packet.Float(0), packet.Float(0), // Yaw Pitch
+		packet.Byte(0),   // flag
+		packet.VarInt(0), // TP ID
+	))
+
+	// Keep the connection alive.
 	for {
 		p, err := conn.ReadPacket()
-		if err != nil {
-			return
-		}
 
-		switch p.ID {
-		case 0x00:
-			var Username packet.String
-			err = p.Scan(&Username)
-			log.Printf("[Server]: Starting login for %v", Username)
-
-			err = conn.WritePacket(packet.Marshal(0x02, packet.UUID(uuid.MustParse("74242c15-feb0-43b7-8045-2d4a602b2d74")), Username))
-		}
+		log.Println("[Server]: Inbound packet", p)
 
 		if err != nil {
+			log.Println("[Server]: ReadPacket failed:", err)
 			return
 		}
 	}
@@ -130,7 +159,7 @@ func handleConn(conn *net.Conn) {
 		log.Println("[Server]: Got server list info request")
 		acceptListPing(conn)
 	case 2: // login
-		log.Println("[Server]: Sawwy, not supporting login procedure yet.")
+		log.Println("[Server]: Get play server request")
 		acceptLogin(conn)
 	}
 }
