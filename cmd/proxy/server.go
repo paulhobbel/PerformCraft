@@ -154,8 +154,28 @@ func handleConn(clientConn *net.Conn) {
 
 				// Switch to play state
 				if p.ID == 0x24 {
+					var (
+						EntityID         packet.Int
+						IsHardcore       packet.Boolean
+						Gamemode         packet.UnsignedByte
+						PreviousGamemode packet.UnsignedByte
+						WorldNames       packet.StringArray
+						DimensionCodec   packet.NBT
+						Dimension        packet.NBT
+						WorldName        packet.String
+					)
+
+					err = p.Scan(&EntityID, &IsHardcore, &Gamemode, &PreviousGamemode, &WorldNames, &DimensionCodec, &WorldName)
+					if err != nil {
+						log.Printf("Failed scanning LoginStartPacket: %v", err)
+					}
+					log.Printf("LoginStart: {entityId: %v, isHardcore: %v, gamemode: %v, prevGamemode: %v, worldNames: %v, dimensionCodec: %v, dimension: %v, worldName: %v}",
+						EntityID, IsHardcore, Gamemode, PreviousGamemode, WorldNames, DimensionCodec.V, Dimension, WorldName)
+
 					gameState = Play
 				}
+				//case Play:
+				//	log.Printf("[Server]: Incoming packet %v\n", p)
 			}
 
 			err = clientConn.WritePacket(p)

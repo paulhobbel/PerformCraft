@@ -3,6 +3,7 @@ package packet
 import (
 	"errors"
 	"github.com/google/uuid"
+	"github.com/paulhobbel/performcraft/pkg/nbt"
 	"io"
 	"math"
 )
@@ -329,6 +330,42 @@ func (u UUID) Encode() []byte {
 func (u UUID) Decode(r Reader) error {
 	_, err := io.ReadFull(r, u[:])
 	return err
+}
+
+type NBT struct {
+	V interface{}
+}
+
+func (n *NBT) Decode(r Reader) error {
+	return nbt.NewDecoder(r).Unmarshal(&n.V)
+}
+
+type StringArray []String
+
+func (s StringArray) Encode() (buf []byte) {
+	buf = append(buf, VarInt(len(s)).Encode()...)
+
+	for i := 0; i < len(s); i++ {
+		buf = append(buf, s[i].Encode()...)
+	}
+
+	return
+}
+
+func (s *StringArray) Decode(r Reader) error {
+	var length VarInt
+	if err := length.Decode(r); err != nil {
+		return err
+	}
+
+	*s = make([]String, length)
+	for i := 0; i < int(length); i++ {
+		if err := (*s)[i].Decode(r); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func readNBytes(r Reader, n int) (bs []byte, err error) {
