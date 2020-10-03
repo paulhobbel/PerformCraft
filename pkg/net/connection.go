@@ -1,41 +1,39 @@
 package net
 
 import (
-	"bufio"
-	"github.com/paulhobbel/performcraft/pkg/net/packet"
-	"io"
+	"github.com/paulhobbel/performcraft/pkg/common"
+	v2 "github.com/paulhobbel/performcraft/pkg/net/packet/v2"
 	"net"
+	"sync"
 )
 
 type Conn struct {
-	Socket net.Conn
-	Reader packet.Reader
+	Socket  net.Conn
+	Encoder *v2.Encoder
+	Decoder *v2.Decoder
 
-	io.Writer
+	State common.PacketState
 
-	threshold int
+	mu sync.RWMutex
 }
 
 func DialMC(addr string) (*Conn, error) {
 	conn, err := net.Dial("tcp", addr)
 	return &Conn{
-		Socket: conn,
-		Reader: bufio.NewReader(conn),
-		Writer: conn,
+		Socket:  conn,
+		Encoder: v2.NewEncoder(conn),
+		Decoder: v2.NewDecoder(conn),
 	}, err
 }
 
-func (c *Conn) ReadPacket() (packet.Packet, error) {
-	p, err := packet.ReadPacket(c.Reader, c.threshold > 0)
-	if err != nil {
-		return packet.Packet{}, err
-	}
-	return *p, err
+func (c *Conn) ReadPacket() (common.Packet, error) {
+	//c.mu.RLock()
+	//defer c.mu.RUnlock()
+	return c.Decoder.Unmarshal(c.State)
 }
 
-func (c *Conn) WritePacket(p packet.Packet) error {
-	_, err := c.Write(p.Pack(c.threshold))
-	return err
+func (c *Conn) WritePacket(p common.Packet) error {
+	return c.Encoder.Marshal(p)
 }
 
 func (c *Conn) Close() error {
@@ -43,5 +41,12 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) SetThreshold(threshold int) {
-	c.threshold = threshold
+	c.Encoder.SetThreshold(threshold)
+	c.Decoder.SetThreshold(threshold)
+}
+
+func (c *Conn) SetState(state common.PacketState) {
+	//c.mu.RLock()
+	c.State = state
+	//c.mu.RUnlock()
 }

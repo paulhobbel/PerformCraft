@@ -3,9 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/paulhobbel/performcraft/pkg/common"
 	"github.com/paulhobbel/performcraft/pkg/net"
-	"github.com/paulhobbel/performcraft/pkg/net/packet"
+	"github.com/paulhobbel/performcraft/pkg/proto"
+	"github.com/paulhobbel/performcraft/pkg/proto/r578"
 	"log"
+
+	_ "github.com/paulhobbel/performcraft/pkg/proto/r578"
+	_ "github.com/paulhobbel/performcraft/pkg/proto/r753"
 )
 
 var sourceAddr = flag.String("s", "localhost:25569", "source address")
@@ -27,10 +32,19 @@ func handleConn(clientConn *net.Conn) {
 
 	//log.Println("Got new client")
 
-	var gameState GameState = Login
+	//var gameState GameState = Login
+
+	// TODO: Place elsewhere
+	def := proto.Registry.GetDefinition(proto.R578)
+
+	clientConn.Decoder.SetPacketFactory(def.GetClientPacket)
+	serverConn.Decoder.SetPacketFactory(def.GetServerPacket)
+
+	// tempfix for concurrency
+	serverConn.SetState(common.Login)
 
 	// Handle client
-	go func() {
+	go func(clientConn, serverConn *net.Conn) {
 		defer func() {
 			defer clientConn.Close()
 			defer serverConn.Close()
@@ -46,58 +60,69 @@ func handleConn(clientConn *net.Conn) {
 				return
 			}
 
-			switch gameState {
-			case Play:
-				if p.ID == 0x12 { // Player Position
-					var pX packet.Double
-					var pY packet.Double
-					var pZ packet.Double
-					var pOnGround packet.Boolean
+			log.Printf("[Client]: Incoming packet %+v\n", p)
 
-					p.Scan(&pX, &pY, &pZ, &pOnGround)
-
-					if !pOnGround {
-						log.Println("[Client]: Client is falling...overriding :P")
-						pOnGround = true
-						p = packet.Marshal(p.ID, &pX, &pY, &pZ, &pOnGround)
-					}
-
-					//log.Printf("[Client] X: %v, Y: %v, Z: %v, IsOnGround: %v", pX, pY, pZ, pOnGround)
-				} else if p.ID == 0x13 { // Player Position And Rotation
-					var pX packet.Double
-					var pY packet.Double
-					var pZ packet.Double
-					var pYaw packet.Float
-					var pPitch packet.Float
-					var pOnGround packet.Boolean
-
-					p.Scan(&pX, &pY, &pZ, &pYaw, &pPitch, &pOnGround)
-
-					if !pOnGround {
-						log.Println("[Client]: Client is falling while moving & rotating...overriding :P")
-						pOnGround = true
-						p = packet.Marshal(p.ID, &pX, &pY, &pZ, &pYaw, &pPitch, &pOnGround)
-					}
-
-					//log.Printf("[Client] Yaw: %v, Pitch: %v, IsOnGround: %v", pYaw, pPitch, pOnGround)
-				} else if p.ID == 0x14 { // Player Rotation
-					var pYaw packet.Float
-					var pPitch packet.Float
-					var pOnGround packet.Boolean
-
-					p.Scan(&pYaw, &pPitch, &pOnGround)
-
-					if !pOnGround {
-						log.Println("[Client]: Client is falling while rotating...overriding :P")
-						pOnGround = true
-						p = packet.Marshal(p.ID, &pYaw, &pPitch, &pOnGround)
-					}
-				} else {
-					log.Printf("[Client]: Incoming packet %v\n", p)
+			switch clientConn.State {
+			case common.Handshaking:
+				switch packet := p.(type) {
+				case *r578.ClientPacketHandshake:
+					clientConn.SetState(packet.State)
+					serverConn.SetState(packet.State)
 				}
-			default:
-				log.Printf("[Client]: Incoming packet %v\n", p)
 			}
+
+			//switch gameState {
+			//case Play:
+			//	if p.ID() == 0x12 { // Player Position
+			//		var pX packet.Double
+			//		var pY packet.Double
+			//		var pZ packet.Double
+			//		var pOnGround packet.Boolean
+			//
+			//		p.Scan(&pX, &pY, &pZ, &pOnGround)
+			//
+			//		if !pOnGround {
+			//			log.Println("[Client]: Client is falling...overriding :P")
+			//			pOnGround = true
+			//			p = packet.Marshal(p.ID, &pX, &pY, &pZ, &pOnGround)
+			//		}
+			//
+			//		//log.Printf("[Client] X: %v, Y: %v, Z: %v, IsOnGround: %v", pX, pY, pZ, pOnGround)
+			//	} else if p.ID() == 0x13 { // Player Position And Rotation
+			//		var pX packet.Double
+			//		var pY packet.Double
+			//		var pZ packet.Double
+			//		var pYaw packet.Float
+			//		var pPitch packet.Float
+			//		var pOnGround packet.Boolean
+			//
+			//		p.Scan(&pX, &pY, &pZ, &pYaw, &pPitch, &pOnGround)
+			//
+			//		if !pOnGround {
+			//			log.Println("[Client]: Client is falling while moving & rotating...overriding :P")
+			//			pOnGround = true
+			//			p = packet.Marshal(p.ID, &pX, &pY, &pZ, &pYaw, &pPitch, &pOnGround)
+			//		}
+			//
+			//		//log.Printf("[Client] Yaw: %v, Pitch: %v, IsOnGround: %v", pYaw, pPitch, pOnGround)
+			//	} else if p.ID() == 0x14 { // Player Rotation
+			//		var pYaw packet.Float
+			//		var pPitch packet.Float
+			//		var pOnGround packet.Boolean
+			//
+			//		p.Scan(&pYaw, &pPitch, &pOnGround)
+			//
+			//		if !pOnGround {
+			//			log.Println("[Client]: Client is falling while rotating...overriding :P")
+			//			pOnGround = true
+			//			p = packet.Marshal(p.ID, &pYaw, &pPitch, &pOnGround)
+			//		}
+			//	} else {
+			//		log.Printf("[Client]: Incoming packet %v\n", p)
+			//	}
+			//default:
+			//	log.Printf("[Client]: Incoming packet %v\n", p)
+			//}
 
 			err = serverConn.WritePacket(p)
 			if err != nil {
@@ -105,10 +130,10 @@ func handleConn(clientConn *net.Conn) {
 				return
 			}
 		}
-	}()
+	}(clientConn, serverConn)
 
 	// Handle server
-	go func() {
+	go func(clientConn, serverConn *net.Conn) {
 		defer func() {
 			defer clientConn.Close()
 			defer serverConn.Close()
@@ -124,59 +149,64 @@ func handleConn(clientConn *net.Conn) {
 				return
 			}
 
-			//log.Printf("[Server]: Incoming packet %v\n", p)
+			log.Printf("[Server]: Incoming packet %+v\n", p)
 
-			switch gameState {
-			case Login:
-				// Auth success
-				if p.ID == 0x02 {
-					var (
-						clientUUID     packet.UUID
-						clientUsername packet.String
-					)
-
-					p.Scan(&clientUUID, &clientUsername)
-
-					log.Printf("[Server]: Got successful login { uuid: %v, username: %v }", clientUUID, clientUsername)
-				}
-
-				// Got SetCompression packet, setup client and server.
-				if p.ID == 0x03 {
-					var threshold packet.VarInt
-					p.Scan(&threshold)
-					serverConn.SetThreshold(int(threshold))
-
-					log.Printf("[Server]: Got SetCompression packet, set to threshold: %v\n", threshold)
+			switch serverConn.State {
+			case common.Login:
+				switch packet := p.(type) {
+				case *r578.ServerPacketSetCompression:
+					serverConn.SetThreshold(int(packet.Threshold))
+					log.Printf("[Server]: Got SetCompression packet, set to threshold: %v\n", 256)
 
 					// Let's not send the SetCompression packet to client as this messes a lot of shit up.
 					continue
 				}
 
-				// Switch to play state
-				if p.ID == 0x24 {
-					var (
-						EntityID         packet.Int
-						IsHardcore       packet.Boolean
-						Gamemode         packet.UnsignedByte
-						PreviousGamemode packet.UnsignedByte
-						WorldNames       packet.StringArray
-						DimensionCodec   packet.NBT
-						Dimension        packet.NBT
-						WorldName        packet.String
-					)
-
-					err = p.Scan(&EntityID, &IsHardcore, &Gamemode, &PreviousGamemode, &WorldNames, &DimensionCodec, &WorldName)
-					if err != nil {
-						log.Printf("Failed scanning LoginStartPacket: %v", err)
-					}
-					log.Printf("LoginStart: {entityId: %v, isHardcore: %v, gamemode: %v, prevGamemode: %v, worldNames: %v, dimensionCodec: %v, dimension: %v, worldName: %v}",
-						EntityID, IsHardcore, Gamemode, PreviousGamemode, WorldNames, DimensionCodec.V, Dimension, WorldName)
-
-					gameState = Play
+				if p.ID() == 0x24 {
+					serverConn.SetState(common.Play)
+					clientConn.SetState(common.Play)
 				}
-				//case Play:
-				//	log.Printf("[Server]: Incoming packet %v\n", p)
 			}
+
+			//switch gameState {
+			//case Login:
+			//	//// Auth success
+			//	//if p.ID() == 0x02 {
+			//	//	var (
+			//	//		clientUUID     packet.UUID
+			//	//		clientUsername packet.String
+			//	//	)
+			//	//
+			//	//	p.Scan(&clientUUID, &clientUsername)
+			//	//
+			//	//	log.Printf("[Server]: Got successful login { uuid: %v, username: %v }", clientUUID, clientUsername)
+			//	//}
+			//
+			//	// Switch to play state
+			//	if p.ID() == 0x24 {
+			//	//	var (
+			//	//		EntityID         packet.Int
+			//	//		IsHardcore       packet.Boolean
+			//	//		Gamemode         packet.UnsignedByte
+			//	//		PreviousGamemode packet.UnsignedByte
+			//	//		WorldNames       packet.StringArray
+			//	//		DimensionCodec   packet.NBT
+			//	//		Dimension        packet.NBT
+			//	//		WorldName        packet.String
+			//	//	)
+			//	//
+			//	//	err = p.Scan(&EntityID, &IsHardcore, &Gamemode, &PreviousGamemode, &WorldNames, &DimensionCodec, &WorldName)
+			//	//	if err != nil {
+			//	//		log.Printf("Failed scanning LoginStartPacket: %v", err)
+			//	//	}
+			//	//	log.Printf("LoginStart: {entityId: %v, isHardcore: %v, gamemode: %v, prevGamemode: %v, worldNames: %v, dimensionCodec: %v, dimension: %v, worldName: %v}",
+			//	//		EntityID, IsHardcore, Gamemode, PreviousGamemode, WorldNames, DimensionCodec.V, Dimension, WorldName)
+			//
+			//		gameState = Play
+			//	}
+			//	//case Play:
+			//	//	log.Printf("[Server]: Incoming packet %v\n", p)
+			//}
 
 			err = clientConn.WritePacket(p)
 			if err != nil {
@@ -185,7 +215,7 @@ func handleConn(clientConn *net.Conn) {
 			}
 
 		}
-	}()
+	}(clientConn, serverConn)
 }
 
 func main() {

@@ -1,7 +1,7 @@
 package net
 
 import (
-	"bufio"
+	v2 "github.com/paulhobbel/performcraft/pkg/net/packet/v2"
 	"net"
 )
 
@@ -21,8 +21,8 @@ func ListenMC(addr string) (*Listener, error) {
 func (l Listener) Accept() (Conn, error) {
 	conn, err := l.Listener.Accept()
 	return Conn{
-		Socket: conn,
-		Reader: bufio.NewReader(conn),
-		Writer: conn,
+		Socket:  conn,
+		Encoder: v2.NewEncoder(conn),
+		Decoder: v2.NewDecoder(conn),
 	}, err
 }

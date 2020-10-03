@@ -1,6 +1,8 @@
 package common
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type PacketID int32
 type PacketState int
@@ -25,4 +27,10 @@ func (s PacketState) String() string {
 	default:
 		panic(fmt.Errorf("no state for value %d", s))
 	}
+}
+
+type Packet interface {
+	ID() PacketID
+	Read(buffer Buffer) error
+	Write(buffer Buffer) error
 }
