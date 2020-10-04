@@ -2,7 +2,7 @@ package r578
 
 import "github.com/paulhobbel/performcraft/pkg/common"
 
-// Handshaking State
+// Handshake State
 // Clientbound packet IDs
 const (
 	HandshakingHandshake common.PacketID = iota // 0x00

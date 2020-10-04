@@ -8,9 +8,9 @@ import (
 func init() {
 	r578 := proto.Registry.RegisterProtocol(proto.R578)
 
-	// Register Handshaking packets
+	// Register Handshake packets
 	r578.
-		RegisterClientPacket(common.Handshaking, HandshakingHandshake, &ClientPacketHandshake{})
+		RegisterClientPacket(common.Handshake, HandshakingHandshake, &ClientPacketHandshake{})
 
 	// Register Status packets
 	r578.
@@ -23,11 +23,11 @@ func init() {
 	r578.
 		RegisterClientPacket(common.Login, LoginStart, &ClientPacketLoginStart{}).
 		RegisterServerPacket(common.Login, LoginDisconnect, &ServerPacketLoginDisconnect{}).
-		RegisterServerPacket(common.Login, LoginSuccess, &ServerPacketLoginSuccess{}).
+		//RegisterServerPacket(common.Login, LoginSuccess, &ServerPacketLoginSuccess{}).
 		RegisterServerPacket(common.Login, LoginSetCompression, &ServerPacketSetCompression{})
 
 	// Register Play packets
-	r578.
-		RegisterServerPacket(common.Play, PlayJoinGame, &ServerPacketPlayJoinGame{}).
-		RegisterServerPacket(common.Play, PlayPlayerPositionLookServer, &ServerPacketPlayPlayerPositionLook{})
+	//r578.
+	//RegisterServerPacket(common.Play, PlayJoinGame, &ServerPacketPlayJoinGame{}).
+	//RegisterServerPacket(common.Play, PlayPlayerPositionLookServer, &ServerPacketPlayPlayerPositionLook{})
 }

@@ -1,6 +1,7 @@
 package r578
 
 import (
+	"fmt"
 	"github.com/paulhobbel/performcraft/pkg/common"
 )
 
@@ -84,4 +85,9 @@ func (p ServerPacketPlayPlayerPositionLook) Write(b common.Buffer) (err error) {
 	err = b.WriteVarInt(p.TeleportID)
 
 	return
+}
+
+func (p ServerPacketPlayPlayerPositionLook) String() string {
+	return fmt.Sprintf("ServerPacketPlayPlayerPositionLook{X: %v, Y: %v, Z: %v, Yaw: %v, Pitch: %v, Flags: %v, TeleportID: %v}",
+		p.X, p.Y, p.Z, p.Yaw, p.Pitch, p.Flags, p.TeleportID)
 }

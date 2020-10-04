@@ -5,18 +5,16 @@ import (
 	"log"
 )
 
-type ProtocolVersion int
-
 const (
-	R578 ProtocolVersion = 578
-	R753 ProtocolVersion = 753
+	R578 common.ProtocolVersion = 578
+	R753 common.ProtocolVersion = 753
 )
 
-type packetMapping map[common.PacketState]map[common.PacketID]func() common.Packet
+type packetMapping map[common.ProtocolState]map[common.PacketID]func() common.Packet
 
 type ProtocolDefinition interface {
-	GetClientPacket(state common.PacketState, id common.PacketID) common.Packet
-	GetServerPacket(state common.PacketState, id common.PacketID) common.Packet
+	GetClientPacket(state common.ProtocolState, id common.PacketID) common.Packet
+	GetServerPacket(state common.ProtocolState, id common.PacketID) common.Packet
 }
 
 type protocolDefinitionImpl struct {
@@ -24,15 +22,15 @@ type protocolDefinitionImpl struct {
 	serverPackets packetMapping
 }
 
-func (def protocolDefinitionImpl) GetClientPacket(state common.PacketState, id common.PacketID) common.Packet {
+func (def protocolDefinitionImpl) GetClientPacket(state common.ProtocolState, id common.PacketID) common.Packet {
 	return def.getSidedPacket(def.clientPackets, state, id)
 }
 
-func (def protocolDefinitionImpl) GetServerPacket(state common.PacketState, id common.PacketID) common.Packet {
+func (def protocolDefinitionImpl) GetServerPacket(state common.ProtocolState, id common.PacketID) common.Packet {
 	return def.getSidedPacket(def.serverPackets, state, id)
 }
 
-func (def protocolDefinitionImpl) getSidedPacket(mapping packetMapping, state common.PacketState, id common.PacketID) common.Packet {
+func (def protocolDefinitionImpl) getSidedPacket(mapping packetMapping, state common.ProtocolState, id common.PacketID) common.Packet {
 	factory := mapping[state][id]
 	if factory == nil {
 		return nil
@@ -41,13 +39,13 @@ func (def protocolDefinitionImpl) getSidedPacket(mapping packetMapping, state co
 	return factory()
 }
 
-var Registry = &protocolRegistry{map[ProtocolVersion]ProtocolDefinition{}}
+var Registry = &protocolRegistry{map[common.ProtocolVersion]ProtocolDefinition{}}
 
 type protocolRegistry struct {
-	definitions map[ProtocolVersion]ProtocolDefinition
+	definitions map[common.ProtocolVersion]ProtocolDefinition
 }
 
-func (reg *protocolRegistry) RegisterProtocol(ver ProtocolVersion) *ProtocolDefinitionBuilder {
+func (reg *protocolRegistry) RegisterProtocol(ver common.ProtocolVersion) *ProtocolDefinitionBuilder {
 	def := &protocolDefinitionImpl{
 		clientPackets: make(packetMapping),
 		serverPackets: make(packetMapping),
@@ -59,7 +57,7 @@ func (reg *protocolRegistry) RegisterProtocol(ver ProtocolVersion) *ProtocolDefi
 	return &ProtocolDefinitionBuilder{def}
 }
 
-func (reg *protocolRegistry) GetDefinition(ver ProtocolVersion) ProtocolDefinition {
+func (reg *protocolRegistry) GetDefinition(ver common.ProtocolVersion) ProtocolDefinition {
 	def := reg.definitions[ver]
 	return def
 }

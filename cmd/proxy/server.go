@@ -41,7 +41,7 @@ func handleConn(clientConn *net.Conn) {
 	serverConn.Decoder.SetPacketFactory(def.GetServerPacket)
 
 	// tempfix for concurrency
-	serverConn.SetState(common.Login)
+	serverConn.SetProtocolState(common.Login)
 
 	// Handle client
 	go func(clientConn, serverConn *net.Conn) {
@@ -63,11 +63,11 @@ func handleConn(clientConn *net.Conn) {
 			log.Printf("[Client]: Incoming packet %+v\n", p)
 
 			switch clientConn.State {
-			case common.Handshaking:
+			case common.Handshake:
 				switch packet := p.(type) {
 				case *r578.ClientPacketHandshake:
-					clientConn.SetState(packet.State)
-					serverConn.SetState(packet.State)
+					clientConn.SetProtocolState(common.ProtocolState(packet.State))
+					serverConn.SetProtocolState(common.ProtocolState(packet.State))
 				}
 			}
 
@@ -149,7 +149,7 @@ func handleConn(clientConn *net.Conn) {
 				return
 			}
 
-			log.Printf("[Server]: Incoming packet %+v\n", p)
+			//log.Printf("[Server]: Incoming packet %+v\n", p)
 
 			switch serverConn.State {
 			case common.Login:
@@ -163,8 +163,8 @@ func handleConn(clientConn *net.Conn) {
 				}
 
 				if p.ID() == 0x24 {
-					serverConn.SetState(common.Play)
-					clientConn.SetState(common.Play)
+					serverConn.SetProtocolState(common.Play)
+					clientConn.SetProtocolState(common.Play)
 				}
 			}
 

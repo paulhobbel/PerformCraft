@@ -1,8 +1,7 @@
-package common
+package proto
 
 import "fmt"
 
-type ProtocolVersion int
 type ProtocolState int
 
 const (

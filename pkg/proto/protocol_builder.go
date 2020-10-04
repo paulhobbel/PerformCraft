@@ -8,7 +8,7 @@ type ProtocolDefinitionBuilder struct {
 	def *protocolDefinitionImpl
 }
 
-func (b *ProtocolDefinitionBuilder) RegisterClientPacket(state common.PacketState, id common.PacketID, packet common.Packet) *ProtocolDefinitionBuilder {
+func (b *ProtocolDefinitionBuilder) RegisterClientPacket(state common.ProtocolState, id common.PacketID, packet common.Packet) *ProtocolDefinitionBuilder {
 	if b.def.clientPackets[state] == nil {
 		b.def.clientPackets[state] = make(map[common.PacketID]func() common.Packet)
 	}
@@ -20,7 +20,7 @@ func (b *ProtocolDefinitionBuilder) RegisterClientPacket(state common.PacketStat
 	return b
 }
 
-func (b *ProtocolDefinitionBuilder) RegisterServerPacket(state common.PacketState, id common.PacketID, packet common.Packet) *ProtocolDefinitionBuilder {
+func (b *ProtocolDefinitionBuilder) RegisterServerPacket(state common.ProtocolState, id common.PacketID, packet common.Packet) *ProtocolDefinitionBuilder {
 	if b.def.serverPackets[state] == nil {
 		b.def.serverPackets[state] = make(map[common.PacketID]func() common.Packet)
 	}

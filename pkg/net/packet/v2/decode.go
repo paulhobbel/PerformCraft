@@ -10,7 +10,7 @@ import (
 type Decoder struct {
 	reader *Reader
 
-	packetFactory func(state common.PacketState, id common.PacketID) common.Packet
+	packetFactory func(state common.ProtocolState, id common.PacketID) common.Packet
 	threshold     int
 }
 
@@ -26,11 +26,11 @@ func (d *Decoder) SetThreshold(threshold int) {
 	d.threshold = threshold
 }
 
-func (d *Decoder) SetPacketFactory(factory func(state common.PacketState, id common.PacketID) common.Packet) {
+func (d *Decoder) SetPacketFactory(factory func(state common.ProtocolState, id common.PacketID) common.Packet) {
 	d.packetFactory = factory
 }
 
-func (d Decoder) Unmarshal(state common.PacketState) (common.Packet, error) {
+func (d Decoder) Unmarshal(state common.ProtocolState) (common.Packet, error) {
 	length, err := d.reader.ReadVarInt()
 	if err != nil {
 		return nil, err
