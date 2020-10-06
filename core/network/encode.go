@@ -1,8 +1,10 @@
 package network
 
 import (
+	"bytes"
+	"compress/zlib"
 	"github.com/paulhobbel/performcraft/core/base"
-	buf2 "github.com/paulhobbel/performcraft/core/bufio"
+	"github.com/paulhobbel/performcraft/core/bufio"
 	"io"
 )
 
@@ -19,31 +21,40 @@ func (e *packetEncoder) SetThreshold(threshold int) {
 	e.threshold = threshold
 }
 
-func (e packetEncoder) Encode(p base.Packet) (err error) {
-	buf := buf2.NewByteBuffer()
-	packetBuf := buf2.NewByteBuffer()
+func (e packetEncoder) Encode(p base.Packet) error {
+	buf := bufio.NewByteBuffer()
+	packetBuf := bufio.NewByteBuffer()
 
-	err = packetBuf.WriteVarInt(int32(p.ID()))
-	err = p.Write(packetBuf)
-	if err != nil {
-		return err
-	}
+	packetBuf.WriteVarInt(int32(p.ID()))
+	p.Write(packetBuf)
 
 	// Compressed
 	if e.threshold > 0 {
-		if packetBuf.Len() > e.threshold {
-			// TODO: Get length of VarInt
-		} else {
-			buf.WriteVarInt(int32(packetBuf.Len() + 1))
-			buf.WriteByte(0x00)
-			buf.Write(packetBuf.Bytes())
-		}
+		deflateBuf := bufio.NewByteBuffer()
+		e.deflate(packetBuf, deflateBuf)
+
+		buf.WriteVarInt(int32(deflateBuf.Len()))
+		buf.Write(deflateBuf.Bytes())
 	} else {
-		err = buf.WriteVarInt(int32(packetBuf.Len()))
-		_, err = buf.Write(packetBuf.Bytes())
+		buf.WriteVarInt(int32(packetBuf.Len()))
+		buf.Write(packetBuf.Bytes())
 	}
 
-	_, err = e.writer.Write(buf.Bytes())
+	_, err := e.writer.Write(buf.Bytes())
+	return err
+}
 
-	return
+func (e packetEncoder) deflate(src, dst bufio.ByteBuffer) {
+	if src.Len() < e.threshold {
+		dst.WriteByte(0x00)
+		dst.Write(src.Bytes())
+	} else {
+		var buf bytes.Buffer
+		deflater := zlib.NewWriter(&buf)
+		deflater.Write(src.Bytes())
+		deflater.Close()
+
+		dst.WriteVarInt(int32(src.Len()))
+		dst.Write(buf.Bytes())
+	}
 }

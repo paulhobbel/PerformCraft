@@ -5,9 +5,12 @@ import (
 	"github.com/paulhobbel/performcraft/handlers/handshake"
 	"github.com/paulhobbel/performcraft/handlers/login"
 	"github.com/paulhobbel/performcraft/handlers/status"
+	"log"
 )
 
 func main() {
+	log.Println("[Main]: Starting PerformCraft 0.0.0")
+
 	srv := core.Instance()
 
 	// TODO: Find better way to register these

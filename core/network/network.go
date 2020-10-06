@@ -50,6 +50,8 @@ func (n *networkImpl) Listen(port int) error {
 	}
 	n.listener = listener
 
+	log.Printf("[Network]: Listening to port %d", port)
+
 	n.acceptConnections()
 
 	return nil

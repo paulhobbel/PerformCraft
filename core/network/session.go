@@ -56,6 +56,8 @@ type sessionImpl struct {
 	decoder *packetDecoder
 
 	publisher pubsub.Publisher
+
+	close chan bool
 }
 
 func newRemoteSession(id uuid.UUID, conn net.Conn, network *networkImpl) *sessionImpl {
@@ -69,6 +71,7 @@ func newRemoteSession(id uuid.UUID, conn net.Conn, network *networkImpl) *sessio
 		encoder:       NewPacketEncoder(conn),
 		decoder:       NewPacketDecoder(conn),
 		publisher:     pubsub.WrapPublisher(network.publisher),
+		close:         make(chan bool, 1),
 	}
 }
 
@@ -90,6 +93,9 @@ func (s *sessionImpl) SetPlayerProfile(profile *game.Profile) {
 
 func (s *sessionImpl) SetThreshold(threshold int) {
 	s.threshold = threshold
+	s.decoder.SetThreshold(threshold)
+	s.encoder.SetThreshold(threshold)
+	log.Printf("[Session]: Changed session compression threshold to %d", threshold)
 }
 
 func (s *sessionImpl) SetProtocolState(state base.ProtocolState) {
@@ -141,6 +147,9 @@ func (s *sessionImpl) initKeepAlive() {
 
 	for {
 		select {
+		case <-s.close:
+			log.Println("[Session]: Stopped keep alive loop")
+			return
 		case curr := <-ticker.C:
 			if s.protocolState == base.Play {
 				// TODO: Handle client not responding...
@@ -171,8 +180,11 @@ func (s *sessionImpl) readPipe() {
 	}
 }
 
-func (s sessionImpl) Close() error {
+func (s *sessionImpl) Close() error {
+	s.close <- true
+
 	delete(s.network.sessions, s.id)
+	close(s.close)
 
 	return s.conn.Close()
 }

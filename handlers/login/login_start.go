@@ -13,6 +13,10 @@ func LoginStartHandler(request *proto.ClientPacketLoginStart, session network.Se
 	//	log.Printf("[Login]: Failed generating id: %v", err)
 	//}
 
+	// Enable compression
+	session.WritePacket(&proto.ServerPacketSetCompression{Threshold: 256})
+	session.SetThreshold(256)
+
 	profile := &game.Profile{
 		UUID: uuid.New(),
 		Name: request.Name,
