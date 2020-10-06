@@ -3,7 +3,7 @@ package proto
 import (
 	"fmt"
 	"github.com/paulhobbel/performcraft/core/base"
-	"github.com/paulhobbel/performcraft/core/util"
+	"github.com/paulhobbel/performcraft/core/bufio"
 )
 
 type BasePacket struct {
@@ -15,12 +15,12 @@ func (p BasePacket) ID() base.PacketID {
 	return p.id
 }
 
-func (p *BasePacket) Read(b util.ByteBuffer) error {
+func (p *BasePacket) Read(b bufio.ByteBuffer) error {
 	p.data = b.Bytes()
 	return nil
 }
 
-func (p BasePacket) Write(b util.ByteBuffer) error {
+func (p BasePacket) Write(b bufio.ByteBuffer) error {
 	_, err := b.Write(p.data)
 
 	return err

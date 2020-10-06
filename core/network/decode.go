@@ -4,13 +4,13 @@ import (
 	"compress/zlib"
 	"fmt"
 	"github.com/paulhobbel/performcraft/core/base"
+	"github.com/paulhobbel/performcraft/core/bufio"
 	"github.com/paulhobbel/performcraft/core/proto"
-	"github.com/paulhobbel/performcraft/core/util"
 	"io"
 )
 
 type packetDecoder struct {
-	reader util.ByteReader
+	reader bufio.ByteReader
 
 	protocolState base.ProtocolState
 	threshold     int
@@ -18,7 +18,7 @@ type packetDecoder struct {
 
 func NewPacketDecoder(r io.Reader) *packetDecoder {
 	return &packetDecoder{
-		reader:        util.NewByteReader(r),
+		reader:        bufio.NewByteReader(r),
 		protocolState: base.Handshake,
 		threshold:     0,
 	}
@@ -44,7 +44,7 @@ func (d packetDecoder) Decode() (base.Packet, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed reading data of packet: %w", err)
 	}
-	buf := util.NewByteBufferFrom(data)
+	buf := bufio.NewByteBufferFrom(data)
 
 	// Decompress if needed
 	buf, err = d.decompressBuffer(buf)
@@ -70,7 +70,7 @@ func (d packetDecoder) Decode() (base.Packet, error) {
 	return packet, nil
 }
 
-func (d packetDecoder) decompressBuffer(buf util.ByteBuffer) (util.ByteBuffer, error) {
+func (d packetDecoder) decompressBuffer(buf bufio.ByteBuffer) (bufio.ByteBuffer, error) {
 	if d.threshold > 0 {
 		size, err := buf.ReadVarInt()
 		if err != nil {
@@ -91,7 +91,7 @@ func (d packetDecoder) decompressBuffer(buf util.ByteBuffer) (util.ByteBuffer, e
 				return buf, err
 			}
 
-			return util.NewByteBufferFrom(decompressed), nil
+			return bufio.NewByteBufferFrom(decompressed), nil
 		}
 	}
 

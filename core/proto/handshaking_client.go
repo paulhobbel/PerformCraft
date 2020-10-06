@@ -3,7 +3,7 @@ package proto
 import (
 	"fmt"
 	"github.com/paulhobbel/performcraft/core/base"
-	"github.com/paulhobbel/performcraft/core/util"
+	"github.com/paulhobbel/performcraft/core/bufio"
 )
 
 type ClientPacketHandshake struct {
@@ -17,7 +17,7 @@ func (p ClientPacketHandshake) ID() base.PacketID {
 	return HandshakingHandshake
 }
 
-func (p *ClientPacketHandshake) Read(b util.ByteBuffer) (err error) {
+func (p *ClientPacketHandshake) Read(b bufio.ByteBuffer) (err error) {
 	p.Version, err = b.ReadVarInt()
 	p.Host, err = b.ReadString()
 	p.Port, err = b.ReadShort()
@@ -27,7 +27,7 @@ func (p *ClientPacketHandshake) Read(b util.ByteBuffer) (err error) {
 	return
 }
 
-func (p ClientPacketHandshake) Write(b util.ByteBuffer) (err error) {
+func (p ClientPacketHandshake) Write(b bufio.ByteBuffer) (err error) {
 	err = b.WriteVarInt(p.Version)
 	err = b.WriteString(p.Host)
 	err = b.WriteShort(p.Port)

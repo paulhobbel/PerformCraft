@@ -3,7 +3,7 @@ package proto
 import (
 	"fmt"
 	"github.com/paulhobbel/performcraft/core/base"
-	"github.com/paulhobbel/performcraft/core/util"
+	"github.com/paulhobbel/performcraft/core/bufio"
 )
 
 type ServerPacketKeepAlive struct {
@@ -14,13 +14,13 @@ func (ServerPacketKeepAlive) ID() base.PacketID {
 	return PlayKeepAliveServer
 }
 
-func (p *ServerPacketKeepAlive) Read(buffer util.ByteBuffer) (err error) {
+func (p *ServerPacketKeepAlive) Read(buffer bufio.ByteBuffer) (err error) {
 	p.KeepAliveID, err = buffer.ReadLong()
 
 	return
 }
 
-func (p ServerPacketKeepAlive) Write(buffer util.ByteBuffer) error {
+func (p ServerPacketKeepAlive) Write(buffer bufio.ByteBuffer) error {
 	return buffer.WriteLong(p.KeepAliveID)
 }
 
@@ -40,7 +40,7 @@ func (ServerPacketPlayJoinGame) ID() base.PacketID {
 	return PlayJoinGame
 }
 
-func (p *ServerPacketPlayJoinGame) Read(b util.ByteBuffer) (err error) {
+func (p *ServerPacketPlayJoinGame) Read(b bufio.ByteBuffer) (err error) {
 	p.EntityId, err = b.ReadInt()
 	p.GameMode, err = b.ReadByte()
 	p.Dimension, err = b.ReadInt()
@@ -54,7 +54,7 @@ func (p *ServerPacketPlayJoinGame) Read(b util.ByteBuffer) (err error) {
 	return
 }
 
-func (p ServerPacketPlayJoinGame) Write(b util.ByteBuffer) (err error) {
+func (p ServerPacketPlayJoinGame) Write(b bufio.ByteBuffer) (err error) {
 	err = b.WriteInt(p.EntityId)
 	err = b.WriteByte(p.GameMode)
 	err = b.WriteInt(p.Dimension)
@@ -82,7 +82,7 @@ func (ServerPacketPlayPlayerPositionLook) ID() base.PacketID {
 	return PlayPlayerPositionLookServer
 }
 
-func (p *ServerPacketPlayPlayerPositionLook) Read(b util.ByteBuffer) (err error) {
+func (p *ServerPacketPlayPlayerPositionLook) Read(b bufio.ByteBuffer) (err error) {
 	p.X, err = b.ReadDouble()
 	p.Y, err = b.ReadDouble()
 	p.Z, err = b.ReadDouble()
@@ -94,7 +94,7 @@ func (p *ServerPacketPlayPlayerPositionLook) Read(b util.ByteBuffer) (err error)
 	return
 }
 
-func (p ServerPacketPlayPlayerPositionLook) Write(b util.ByteBuffer) (err error) {
+func (p ServerPacketPlayPlayerPositionLook) Write(b bufio.ByteBuffer) (err error) {
 	err = b.WriteDouble(p.X)
 	err = b.WriteDouble(p.Y)
 	err = b.WriteDouble(p.Z)

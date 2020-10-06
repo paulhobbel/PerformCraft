@@ -3,8 +3,8 @@ package proto
 import (
 	"fmt"
 	"github.com/paulhobbel/performcraft/core/base"
+	"github.com/paulhobbel/performcraft/core/bufio"
 	"github.com/paulhobbel/performcraft/core/text"
-	"github.com/paulhobbel/performcraft/core/util"
 )
 
 type ServerPacketLoginDisconnect struct {
@@ -15,13 +15,13 @@ func (p ServerPacketLoginDisconnect) ID() base.PacketID {
 	return LoginDisconnect
 }
 
-func (p *ServerPacketLoginDisconnect) Read(b util.ByteBuffer) (err error) {
+func (p *ServerPacketLoginDisconnect) Read(b bufio.ByteBuffer) (err error) {
 	p.Reason, err = b.ReadMessage()
 
 	return
 }
 
-func (p ServerPacketLoginDisconnect) Write(b util.ByteBuffer) error {
+func (p ServerPacketLoginDisconnect) Write(b bufio.ByteBuffer) error {
 	return b.WriteMessage(p.Reason)
 }
 
@@ -38,14 +38,14 @@ func (ServerPacketLoginSuccess) ID() base.PacketID {
 	return LoginSuccess
 }
 
-func (p *ServerPacketLoginSuccess) Read(b util.ByteBuffer) (err error) {
+func (p *ServerPacketLoginSuccess) Read(b bufio.ByteBuffer) (err error) {
 	p.UUID, err = b.ReadString()
 	p.Name, err = b.ReadString()
 
 	return
 }
 
-func (p ServerPacketLoginSuccess) Write(b util.ByteBuffer) (err error) {
+func (p ServerPacketLoginSuccess) Write(b bufio.ByteBuffer) (err error) {
 	err = b.WriteString(p.UUID)
 	err = b.WriteString(p.Name)
 
@@ -64,13 +64,13 @@ func (p ServerPacketSetCompression) ID() base.PacketID {
 	return LoginSetCompression
 }
 
-func (p *ServerPacketSetCompression) Read(b util.ByteBuffer) (err error) {
+func (p *ServerPacketSetCompression) Read(b bufio.ByteBuffer) (err error) {
 	p.Threshold, err = b.ReadVarInt()
 
 	return
 }
 
-func (p ServerPacketSetCompression) Write(b util.ByteBuffer) error {
+func (p ServerPacketSetCompression) Write(b bufio.ByteBuffer) error {
 	return b.WriteVarInt(p.Threshold)
 }
 

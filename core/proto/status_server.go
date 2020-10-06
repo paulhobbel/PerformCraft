@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/paulhobbel/performcraft/core/base"
-	"github.com/paulhobbel/performcraft/core/util"
+	"github.com/paulhobbel/performcraft/core/bufio"
 )
 
 type ServerPacketStatusResponse struct {
@@ -29,7 +29,7 @@ func (p ServerPacketStatusResponse) ID() base.PacketID {
 	return StatusResponse
 }
 
-func (p *ServerPacketStatusResponse) Read(b util.ByteBuffer) error {
+func (p *ServerPacketStatusResponse) Read(b bufio.ByteBuffer) error {
 	status, err := b.ReadString()
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func (p *ServerPacketStatusResponse) Read(b util.ByteBuffer) error {
 	return json.Unmarshal([]byte(status), &p)
 }
 
-func (p ServerPacketStatusResponse) Write(b util.ByteBuffer) error {
+func (p ServerPacketStatusResponse) Write(b bufio.ByteBuffer) error {
 	status, err := json.Marshal(p)
 	if err != nil {
 		return err

@@ -1,11 +1,13 @@
 package base
 
-import "github.com/paulhobbel/performcraft/core/util"
+import (
+	"github.com/paulhobbel/performcraft/core/bufio"
+)
 
 type PacketID int32
 
 type Packet interface {
 	ID() PacketID
-	Read(buffer util.ByteBuffer) error
-	Write(buffer util.ByteBuffer) error
+	Read(buffer bufio.ByteBuffer) error
+	Write(buffer bufio.ByteBuffer) error
 }

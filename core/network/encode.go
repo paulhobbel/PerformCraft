@@ -2,7 +2,7 @@ package network
 
 import (
 	"github.com/paulhobbel/performcraft/core/base"
-	"github.com/paulhobbel/performcraft/core/util"
+	buf2 "github.com/paulhobbel/performcraft/core/bufio"
 	"io"
 )
 
@@ -20,8 +20,8 @@ func (e *packetEncoder) SetThreshold(threshold int) {
 }
 
 func (e packetEncoder) Encode(p base.Packet) (err error) {
-	buf := util.NewByteBuffer()
-	packetBuf := util.NewByteBuffer()
+	buf := buf2.NewByteBuffer()
+	packetBuf := buf2.NewByteBuffer()
 
 	err = packetBuf.WriteVarInt(int32(p.ID()))
 	err = p.Write(packetBuf)

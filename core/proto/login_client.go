@@ -3,7 +3,7 @@ package proto
 import (
 	"fmt"
 	"github.com/paulhobbel/performcraft/core/base"
-	"github.com/paulhobbel/performcraft/core/util"
+	"github.com/paulhobbel/performcraft/core/bufio"
 )
 
 type ClientPacketLoginStart struct {
@@ -14,13 +14,13 @@ func (ClientPacketLoginStart) ID() base.PacketID {
 	return LoginStart
 }
 
-func (p *ClientPacketLoginStart) Read(b util.ByteBuffer) (err error) {
+func (p *ClientPacketLoginStart) Read(b bufio.ByteBuffer) (err error) {
 	p.Name, err = b.ReadString()
 
 	return
 }
 
-func (p ClientPacketLoginStart) Write(b util.ByteBuffer) error {
+func (p ClientPacketLoginStart) Write(b bufio.ByteBuffer) error {
 	return b.WriteString(p.Name)
 }
 

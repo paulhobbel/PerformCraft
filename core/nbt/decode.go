@@ -7,7 +7,7 @@ import (
 	"compress/zlib"
 	"errors"
 	"fmt"
-	"github.com/paulhobbel/performcraft/pkg/util"
+	"github.com/paulhobbel/performcraft/core/util"
 	"io"
 	"math"
 	"reflect"
