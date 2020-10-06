@@ -1,25 +1,25 @@
 package game
 
-import "github.com/paulhobbel/performcraft/core/proto"
+import "github.com/paulhobbel/performcraft/core/base"
 
 type Version interface {
-	GetProtocol() proto.ProtocolVersion
+	GetProtocol() base.ProtocolVersion
 	GetName() string
 }
 
 func NewVersion(name string, protocol int) Version {
 	return &versionImpl{
-		protocol: proto.ProtocolVersion(protocol),
+		protocol: base.ProtocolVersion(protocol),
 		name:     name,
 	}
 }
 
 type versionImpl struct {
-	protocol proto.ProtocolVersion
+	protocol base.ProtocolVersion
 	name     string
 }
 
-func (v versionImpl) GetProtocol() proto.ProtocolVersion {
+func (v versionImpl) GetProtocol() base.ProtocolVersion {
 	return v.protocol
 }
 
