@@ -41,7 +41,25 @@ const (
 
 // Play State
 // Clientbound packet IDs
-const ()
+const (
+	PlayTeleportConfirm          base.PacketID = iota // 0x00
+	PlayQueryBlockNBT                                 // 0x01
+	PlaySetDifficulty                                 // 0x02
+	PlayChatMessageClient                             // 0x03
+	PlayClientStatus                                  // 0x04
+	PlayClientSettings                                // 0x05
+	PlayTabCompleteClient                             // 0x06
+	PlayWindowConfirmationClient                      // 0x07
+	PlayClickWindowButton                             // 0x08
+	PlayClickWindow                                   // 0x09
+	PlayCloseWindowClient                             // 0x0A
+	PlayPluginMessageClient                           // 0x0B
+	PlayEditBook                                      // 0x0C
+	PlayQueryEntityNBT                                // 0x0D
+	PlayInteractEntity                                // 0x0E
+	PlayKeepAliveClient                               // 0x0F
+	PlayLockDifficulty                                // 0x10
+)
 
 // Serverbound packetIDs
 const (

@@ -23,7 +23,16 @@ func init() {
 			},
 		},
 		base.Play: {
-			0x0f: func() base.Packet {
+			PlayTeleportConfirm: func() base.Packet {
+				return &ClientPacketTeleportConfirm{}
+			},
+			PlayClientSettings: func() base.Packet {
+				return &ClientPacketSettings{}
+			},
+			PlayPluginMessageClient: func() base.Packet {
+				return &ClientPacketPluginMessage{}
+			},
+			PlayKeepAliveClient: func() base.Packet {
 				return &ClientPacketKeepAlive{}
 			},
 		},
